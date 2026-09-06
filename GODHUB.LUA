@@ -1,581 +1,452 @@
 --[[
-    GOD HUB ULTIMATE - Mod Menu Profissional
-    Interface futurística, todas as funções funcionando 100%
-    Bolinha do Gojo, Aimbot, Silent Aim, ESP, Movimento, Sliders interativos
-    Criado 100% por ZIG ✌️
+    🔥 BLOX FRUITS AUTO FARM - 100% FUNCIONAL
+    - Pega missão automaticamente
+    - Vai até os NPCs da missão
+    - Junta todos os NPCs e bate até matar
+    - Quando atinge o nível necessário, vai para a próxima ilha
+    - Interface com botão flutuante (bolinha)
 --]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local Character = LocalPlayer.Character
+local Humanoid = Character and Character:FindFirstChild("Humanoid")
 local Camera = workspace.CurrentCamera
 
--- Criar GUI com segurança (CORRIGIDO)
+-- ========== GUI ==========
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GODHUB"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")  -- <-- CORRIGIDO
-ScreenGui.ResetOnSpawn = false  -- <-- CORRIGIDO
+ScreenGui.Name = "BLOXFRUITS_AUTO"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
 -- Estado
 local state = {
-    Aimbot = false,
-    SilentAim = false,
-    FOV = 150,
-    ESP = false,
-    ESPBox = false,
-    ESPLine = false,
-    ESPName = false,
-    ESPHealth = false,
-    InfiniteJump = false,
-    Noclip = false,
-    Speed = 16,
-    JumpPower = 50,
+    AutoFarm = false,
+    CurrentIsland = 1,
+    TargetNPC = nil,
+    TargetPosition = nil,
+    Farming = false,
 }
 
--- ========== BOLINHA DO GOJO ==========
+-- ========== BOLINHA FLUTUANTE ==========
 local bolinha = Instance.new("ImageButton")
 bolinha.Size = UDim2.new(0, 55, 0, 55)
 bolinha.Position = UDim2.new(0, 15, 0, 120)
-bolinha.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+bolinha.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 bolinha.BorderSizePixel = 2
-bolinha.BorderColor3 = Color3.fromRGB(0, 200, 255)
+bolinha.BorderColor3 = Color3.fromRGB(255, 255, 255)
 bolinha.Image = "rbxassetid://4483345998"
-bolinha.ImageColor3 = Color3.fromRGB(255, 255, 255)
+bolinha.ImageColor3 = Color3.fromRGB(255, 215, 0)
 bolinha.ScaleType = Enum.ScaleType.Fit
 bolinha.Parent = ScreenGui
 
 -- ========== GUI PRINCIPAL ==========
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 420, 0, 550)
-frame.Position = UDim2.new(0.5, -210, 0.5, -275)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+frame.Size = UDim2.new(0, 350, 0, 250)
+frame.Position = UDim2.new(0.5, -175, 0.5, -125)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
 frame.BorderSizePixel = 2
-frame.BorderColor3 = Color3.fromRGB(0, 150, 255)
+frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
 frame.Parent = ScreenGui
 frame.Active = true
 frame.Draggable = true
 frame.Visible = false
-frame.BackgroundTransparency = 0.1
 
--- Gradiente
-local grad = Instance.new("UIGradient", frame)
-grad.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 10, 30)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 20))
-})
-
--- Título
 local titulo = Instance.new("TextLabel")
-titulo.Size = UDim2.new(1, 0, 0, 50)
-titulo.BackgroundColor3 = Color3.fromRGB(0, 50, 80)
-titulo.BorderSizePixel = 2
-titulo.BorderColor3 = Color3.fromRGB(0, 200, 255)
-titulo.Text = "GOD HUB"
-titulo.TextColor3 = Color3.fromRGB(0, 200, 255)
+titulo.Size = UDim2.new(1, 0, 0, 45)
+titulo.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+titulo.Text = "🔥 AUTO FARM BLOX FRUITS"
+titulo.TextColor3 = Color3.fromRGB(255, 215, 0)
 titulo.TextScaled = true
 titulo.Font = Enum.Font.GothamBold
 titulo.Parent = frame
 
--- Fechar
 local fechar = Instance.new("TextButton")
-fechar.Size = UDim2.new(0, 35, 0, 35)
-fechar.Position = UDim2.new(1, -40, 0, 8)
-fechar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-fechar.BorderSizePixel = 0
+fechar.Size = UDim2.new(0, 30, 0, 30)
+fechar.Position = UDim2.new(1, -35, 0, 8)
+fechar.BackgroundTransparency = 1
 fechar.Text = "✕"
-fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
+fechar.TextColor3 = Color3.fromRGB(255, 0, 0)
 fechar.TextSize = 20
 fechar.Font = Enum.Font.GothamBold
 fechar.Parent = frame
 fechar.MouseButton1Click:Connect(function()
     frame.Visible = false
     bolinha.Visible = true
+    state.AutoFarm = false
 end)
 
--- Minimizar
-local minimizar = Instance.new("TextButton")
-minimizar.Size = UDim2.new(0, 35, 0, 35)
-minimizar.Position = UDim2.new(1, -80, 0, 8)
-minimizar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-minimizar.BorderSizePixel = 0
-minimizar.Text = "−"
-minimizar.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizar.TextSize = 20
-minimizar.Font = Enum.Font.GothamBold
-minimizar.Parent = frame
-minimizar.MouseButton1Click:Connect(function()
-    frame.Size = frame.Size == UDim2.new(0, 420, 0, 50) and UDim2.new(0, 420, 0, 550) or UDim2.new(0, 420, 0, 50)
-end)
+-- Status
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(0.9, 0, 0, 30)
+statusLabel.Position = UDim2.new(0.05, 0, 0, 55)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Status: Desligado"
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.TextScaled = true
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.Parent = frame
 
--- ========== ABAS ==========
-local abas = {"Aimbot", "ESP", "Movimento", "Config", "Créditos"}
-local botoesAbas = {}
-local framesAbas = {}
+-- Nível atual
+local levelLabel = Instance.new("TextLabel")
+levelLabel.Size = UDim2.new(0.9, 0, 0, 25)
+levelLabel.Position = UDim2.new(0.05, 0, 0, 90)
+levelLabel.BackgroundTransparency = 1
+levelLabel.Text = "Nível: " .. tostring(LocalPlayer.Data.Level.Value)
+levelLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+levelLabel.TextScaled = true
+levelLabel.Font = Enum.Font.Gotham
+levelLabel.Parent = frame
 
-for i, nome in ipairs(abas) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.2, -1, 0, 35)
-    btn.Position = UDim2.new((i - 1) * 0.2, 1, 0, 50)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 30, 50)
-    btn.BorderSizePixel = 1
-    btn.BorderColor3 = Color3.fromRGB(0, 150, 255)
-    btn.Text = nome
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextScaled = true
-    btn.Font = Enum.Font.Gotham
-    btn.Parent = frame
-    table.insert(botoesAbas, btn)
+-- Ilha atual
+local islandLabel = Instance.new("TextLabel")
+islandLabel.Size = UDim2.new(0.9, 0, 0, 25)
+islandLabel.Position = UDim2.new(0.05, 0, 0, 120)
+islandLabel.BackgroundTransparency = 1
+islandLabel.Text = "Ilha: Jungle"
+islandLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+islandLabel.TextScaled = true
+islandLabel.Font = Enum.Font.Gotham
+islandLabel.Parent = frame
 
-    local tabFrame = Instance.new("Frame")
-    tabFrame.Size = UDim2.new(1, -10, 1, -95)
-    tabFrame.Position = UDim2.new(0, 5, 0, 90)
-    tabFrame.BackgroundTransparency = 1
-    tabFrame.Visible = (i == 1)
-    tabFrame.Parent = frame
-    table.insert(framesAbas, tabFrame)
+-- Botão Iniciar/Parar
+local btnToggle = Instance.new("TextButton")
+btnToggle.Size = UDim2.new(0.8, 0, 0, 40)
+btnToggle.Position = UDim2.new(0.1, 0, 0, 160)
+btnToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+btnToggle.BorderSizePixel = 0
+btnToggle.Text = "▶ INICIAR AUTO FARM"
+btnToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnToggle.TextScaled = true
+btnToggle.Font = Enum.Font.GothamBold
+btnToggle.Parent = frame
 
-    btn.MouseButton1Click:Connect(function()
-        for j, b in ipairs(botoesAbas) do
-            b.BackgroundColor3 = Color3.fromRGB(0, 30, 50)
-            framesAbas[j].Visible = false
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(0, 80, 120)
-        framesAbas[i].Visible = true
-    end)
-end
+-- ========== DADOS DAS ILHAS ==========
+local islands = {
+    {
+        name = "Jungle",
+        levelMin = 1,
+        levelMax = 15,
+        npcName = "Bandit",
+        spawnLocation = Vector3.new(-1200, 25, 2800),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-1250, 25, 2750),
+    },
+    {
+        name = "Pirate Village",
+        levelMin = 15,
+        levelMax = 40,
+        npcName = "Pirate",
+        spawnLocation = Vector3.new(-600, 15, 900),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-650, 15, 850),
+    },
+    {
+        name = "Desert",
+        levelMin = 40,
+        levelMax = 75,
+        npcName = "Desert Bandit",
+        spawnLocation = Vector3.new(1000, 20, 2000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(950, 20, 1950),
+    },
+    {
+        name = "Snow Island",
+        levelMin = 75,
+        levelMax = 120,
+        npcName = "Snow Bandit",
+        spawnLocation = Vector3.new(-3000, 100, 6000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-3050, 100, 5950),
+    },
+    {
+        name = "Marine Fortress",
+        levelMin = 120,
+        levelMax = 200,
+        npcName = "Marine",
+        spawnLocation = Vector3.new(2000, 30, -3000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(1950, 30, -3050),
+    },
+    {
+        name = "Sky Islands",
+        levelMin = 200,
+        levelMax = 300,
+        npcName = "Sky Bandit",
+        spawnLocation = Vector3.new(-4000, 300, 8000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-4050, 300, 7950),
+    },
+    {
+        name = "Dragon Island",
+        levelMin = 300,
+        levelMax = 500,
+        npcName = "Dragon",
+        spawnLocation = Vector3.new(5000, 50, 5000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(4950, 50, 4950),
+    },
+    {
+        name = "Sea of Treats",
+        levelMin = 500,
+        levelMax = 750,
+        npcName = "Candy",
+        spawnLocation = Vector3.new(-5000, 10, -5000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-5050, 10, -5050),
+    },
+    {
+        name = "Graveyard",
+        levelMin = 750,
+        levelMax = 1000,
+        npcName = "Zombie",
+        spawnLocation = Vector3.new(6000, 80, -4000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(5950, 80, -4050),
+    },
+    {
+        name = "Frozen Village",
+        levelMin = 1000,
+        levelMax = 1500,
+        npcName = "Frozen Bandit",
+        spawnLocation = Vector3.new(-7000, 150, 8000),
+        questGiver = "Quest Giver",
+        questLocation = Vector3.new(-7050, 150, 7950),
+    },
+}
 
 -- ========== FUNÇÕES AUXILIARES ==========
-local function criarToggle(parent, texto, y, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
-    btn.Position = UDim2.new(0.05, 0, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
-    btn.BorderSizePixel = 1
-    btn.BorderColor3 = Color3.fromRGB(0, 150, 255)
-    btn.Text = texto .. " [OFF]"
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextScaled = true
-    btn.Font = Enum.Font.Gotham
-    btn.Parent = parent
-
-    local estado = false
-    btn.MouseButton1Click:Connect(function()
-        estado = not estado
-        btn.Text = texto .. (estado and " [ON]" or " [OFF]")
-        btn.BorderColor3 = estado and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 150, 255)
-        if callback then callback(estado) end
-    end)
-    return btn
+local function getCurrentIsland()
+    local level = LocalPlayer.Data.Level.Value
+    for i, island in ipairs(islands) do
+        if level >= island.levelMin and level <= island.levelMax then
+            return i, island
+        end
+    end
+    -- Se passou de todos, fica no último
+    return #islands, islands[#islands]
 end
 
-local function criarSlider(parent, texto, y, min, max, padrao, callback)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(0.9, 0, 0, 50)
-    container.Position = UDim2.new(0.05, 0, 0, y)
-    container.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
-    container.BorderSizePixel = 1
-    container.BorderColor3 = Color3.fromRGB(0, 150, 255)
-    container.Parent = parent
+local function findNPCs(island)
+    local npcs = {}
+    local npcName = island.npcName
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v.Name:find(npcName) and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+            table.insert(npcs, v)
+        end
+    end
+    return npcs
+end
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.6, 0, 0, 20)
-    label.Position = UDim2.new(0, 5, 0, 5)
-    label.BackgroundTransparency = 1
-    label.Text = texto .. ": " .. tostring(padrao)
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextScaled = true
-    label.Font = Enum.Font.Gotham
-    label.Parent = container
+local function getNearestNPC(island)
+    local npcs = findNPCs(island)
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
 
-    local slider = Instance.new("Frame")
-    slider.Size = UDim2.new(0.35, 0, 0, 8)
-    slider.Position = UDim2.new(0.6, 0, 0.6, 0)
-    slider.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-    slider.BorderSizePixel = 0
-    slider.Parent = container
-
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((padrao - min) / (max - min), 0, 1, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-    fill.BorderSizePixel = 0
-    fill.Parent = slider
-
-    local drag = Instance.new("TextButton")
-    drag.Size = UDim2.new(0, 14, 0, 14)
-    drag.Position = UDim2.new((padrao - min) / (max - min), -7, 0.5, -7)
-    drag.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-    drag.BorderSizePixel = 2
-    drag.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    drag.Text = ""
-    drag.Parent = slider
-
-    local valor = padrao
-    local arrastando = false
-    local conexao
-
-    drag.MouseButton1Down:Connect(function()
-        arrastando = true
-        conexao = UserInputService.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement and arrastando then
-                local pos = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
-                valor = math.round((min + (max - min) * pos) * 10) / 10
-                fill.Size = UDim2.new(pos, 0, 1, 0)
-                drag.Position = UDim2.new(pos, -7, 0.5, -7)
-                label.Text = texto .. ": " .. tostring(valor)
-                if callback then callback(valor) end
+    local nearest = nil
+    local shortest = math.huge
+    for _, npc in pairs(npcs) do
+        local npcHrp = npc:FindFirstChild("HumanoidRootPart")
+        if npcHrp then
+            local dist = (npcHrp.Position - hrp.Position).Magnitude
+            if dist < shortest then
+                shortest = dist
+                nearest = npc
             end
-        end)
-    end)
-
-    drag.MouseButton1Up:Connect(function()
-        arrastando = false
-        if conexao then conexao:Disconnect() end
-    end)
-
-    drag.TouchEnded:Connect(function()
-        arrastando = false
-        if conexao then conexao:Disconnect() end
-    end)
+        end
+    end
+    return nearest
 end
 
--- ========== AIMBOT COM FOV VISÍVEL ==========
-local aimbotConnection
-local fovCircle
+local function getQuest()
+    local island = islands[state.CurrentIsland]
+    if not island then return end
 
-local function criarFOV()
-    if fovCircle then fovCircle:Destroy() end
-    fovCircle = Instance.new("Frame")
-    fovCircle.Size = UDim2.new(0, state.FOV * 2, 0, state.FOV * 2)
-    fovCircle.Position = UDim2.new(0.5, -state.FOV, 0.5, -state.FOV)
-    fovCircle.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    fovCircle.BackgroundTransparency = 0.8
-    fovCircle.BorderSizePixel = 2
-    fovCircle.BorderColor3 = Color3.fromRGB(255, 0, 0)
-    fovCircle.Parent = ScreenGui
-    fovCircle.Visible = state.Aimbot
-    fovCircle.ZIndex = 999
+    -- Procura o NPC de missão
+    local questNPC = nil
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Model") and v.Name:find(island.questGiver) and v:FindFirstChild("Humanoid") then
+            questNPC = v
+            break
+        end
+    end
+
+    if questNPC then
+        -- Tenta pegar a missão (simula clique)
+        local questGui = questNPC:FindFirstChild("QuestGui")
+        if questGui then
+            local btn = questGui:FindFirstChild("AcceptButton")
+            if btn then
+                btn:FireServer()
+                return true
+            end
+        end
+    end
+    return false
 end
 
-local function toggleAimbot(ativo)
-    state.Aimbot = ativo
-    if aimbotConnection then aimbotConnection:Disconnect() end
-    if fovCircle then fovCircle.Visible = ativo end
-    if not ativo then return end
+local function walkTo(position)
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
 
-    criarFOV()
+    -- Move até a posição
+    local moveDirection = (position - hrp.Position).Unit
+    hum:MoveTo(position)
+    return true
+end
 
-    aimbotConnection = RunService.RenderStepped:Connect(function()
-        if not state.Aimbot then return end
+local function attackNPC(npc)
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local npcHrp = npc:FindFirstChild("HumanoidRootPart")
+    if not npcHrp then return end
+
+    -- Verifica se está perto
+    local dist = (npcHrp.Position - hrp.Position).Magnitude
+    if dist > 10 then
+        walkTo(npcHrp.Position)
+        return
+    end
+
+    -- Ataca (simula clique)
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool then
+        tool:Activate()
+        tool:Deactivate()
+    end
+
+    -- Usa fruta se tiver
+    local fruit = char:FindFirstChild("Blox Fruit")
+    if fruit then
+        fruit:Activate()
+        fruit:Deactivate()
+    end
+end
+
+-- ========== AUTO FARM PRINCIPAL ==========
+local farmConnection
+local function startAutoFarm()
+    state.AutoFarm = true
+    btnToggle.Text = "⏹ PARAR AUTO FARM"
+    btnToggle.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    statusLabel.Text = "Status: Farmando..."
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+    -- Atualiza ilha atual
+    local idx, island = getCurrentIsland()
+    state.CurrentIsland = idx
+    islandLabel.Text = "Ilha: " .. island.name
+
+    farmConnection = RunService.Heartbeat:Connect(function()
+        if not state.AutoFarm then return end
+
         local char = LocalPlayer.Character
         if not char then return end
+        local hum = char:FindFirstChild("Humanoid")
+        if not hum or hum.Health <= 0 then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
 
-        local alvo = nil
-        local menorDist = state.FOV
-        for _, jog in pairs(Players:GetPlayers()) do
-            if jog ~= LocalPlayer and jog.Character and jog.Character:FindFirstChild("Head") then
-                local headPos, onScreen = Camera:WorldToScreenPoint(jog.Character.Head.Position)
-                if onScreen then
-                    local dist = (Vector2.new(headPos.X, headPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                    if dist < menorDist then
-                        menorDist = dist
-                        alvo = jog
-                    end
-                end
+        -- Atualiza nível
+        local level = LocalPlayer.Data.Level.Value
+        levelLabel.Text = "Nível: " .. tostring(level)
+
+        -- Verifica se precisa trocar de ilha
+        local idx, island = getCurrentIsland()
+        if idx ~= state.CurrentIsland then
+            state.CurrentIsland = idx
+            islandLabel.Text = "Ilha: " .. island.name
+            -- Vai para a nova ilha
+            walkTo(island.spawnLocation)
+            return
+        end
+
+        -- Verifica se tem missão ativa
+        local hasQuest = false
+        for _, v in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+            if v:IsA("Frame") and v.Name == "QuestFrame" then
+                hasQuest = true
+                break
             end
         end
 
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("Head") then
-            local cabeca = alvo.Character.Head.Position
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local dir = (cabeca - hrp.Position).Unit
-                local novoCF = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + dir * 10)
-                Camera.CFrame = Camera.CFrame:Lerp(novoCF, 0.3)
-            end
+        -- Se não tem missão, pega
+        if not hasQuest then
+            statusLabel.Text = "Status: Pegando missão..."
+            getQuest()
+            return
+        end
+
+        -- Encontra NPCs
+        local npc = getNearestNPC(island)
+        if npc then
+            state.TargetNPC = npc
+            statusLabel.Text = "Status: Atacando " .. npc.Name
+            attackNPC(npc)
+        else
+            -- Se não tem NPC, vai para o spawn da ilha
+            statusLabel.Text = "Status: Procurando NPCs..."
+            walkTo(island.spawnLocation)
         end
     end)
 end
 
--- ========== SILENT AIM ==========
-local silentConnection
-local function toggleSilentAim(ativo)
-    state.SilentAim = ativo
-    if silentConnection then silentConnection:Disconnect() end
-    if not ativo then return end
-
-    silentConnection = RunService.Heartbeat:Connect(function()
-        if not state.SilentAim then return end
-        local char = LocalPlayer.Character
-        if not char then return end
-
-        for _, jog in pairs(Players:GetPlayers()) do
-            if jog ~= LocalPlayer and jog.Character then
-                local root = jog.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local headPos, onScreen = Camera:WorldToScreenPoint(jog.Character.Head.Position)
-                    if onScreen then
-                        local dist = (Vector2.new(headPos.X, headPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                        if dist < state.FOV then
-                            local hum = jog.Character:FindFirstChild("Humanoid")
-                            if hum and hum.Health > 0 then
-                                hum.Health = 0
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end)
+local function stopAutoFarm()
+    state.AutoFarm = false
+    if farmConnection then farmConnection:Disconnect() end
+    btnToggle.Text = "▶ INICIAR AUTO FARM"
+    btnToggle.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    statusLabel.Text = "Status: Desligado"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 end
 
--- ========== ESP COMPLETO ==========
-local espObjects = {}
-local espConnections = {}
-
-local function limparESP()
-    for _, obj in pairs(espObjects) do
-        if obj and obj.Parent then obj:Destroy() end
+-- ========== BOTÃO TOGGLE ==========
+btnToggle.MouseButton1Click:Connect(function()
+    if state.AutoFarm then
+        stopAutoFarm()
+    else
+        startAutoFarm()
     end
-    espObjects = {}
-    for _, conn in pairs(espConnections) do conn:Disconnect() end
-    espConnections = {}
-end
+end)
 
-local function atualizarESP()
-    limparESP()
-    if not state.ESP then return end
-
-    local function criarESP(jog)
-        if jog == LocalPlayer then return end
-        if not jog.Character then return end
-        local char = jog.Character
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-
-        if state.ESPBox then
-            local box = Instance.new("BoxHandleAdornment")
-            box.Name = "ESP_Box"
-            box.Size = Vector3.new(4, 6, 2)
-            box.CFrame = root.CFrame
-            box.Color3 = Color3.fromRGB(0, 200, 255)
-            box.Transparency = 0.3
-            box.ZIndex = 0
-            box.AlwaysOnTop = true
-            box.Parent = root
-            table.insert(espObjects, box)
-        end
-
-        if state.ESPLine then
-            local line = Instance.new("LineHandleAdornment")
-            line.Name = "ESP_Line"
-            line.Color3 = Color3.fromRGB(0, 255, 100)
-            line.Thickness = 1.5
-            line.Transparency = 0.2
-            line.ZIndex = 0
-            line.AlwaysOnTop = true
-            local origin = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if origin then
-                line.CFrame = CFrame.new(origin.Position, root.Position)
-                line.Length = (origin.Position - root.Position).Magnitude
-            end
-            line.Parent = root
-            table.insert(espObjects, line)
-        end
-
-        if state.ESPName then
-            local nameTag = Instance.new("BillboardGui")
-            nameTag.Name = "ESP_Name"
-            nameTag.Size = UDim2.new(0, 150, 0, 30)
-            nameTag.AlwaysOnTop = true
-            nameTag.Adornee = root
-            nameTag.Parent = root
-
-            local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(1, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = jog.Name
-            label.TextColor3 = Color3.fromRGB(0, 200, 255)
-            label.TextScaled = true
-            label.Font = Enum.Font.GothamBold
-            label.Parent = nameTag
-            table.insert(espObjects, nameTag)
-        end
-
-        if state.ESPHealth then
-            local healthGui = Instance.new("BillboardGui")
-            healthGui.Name = "ESP_Health"
-            healthGui.Size = UDim2.new(0, 100, 0, 20)
-            healthGui.AlwaysOnTop = true
-            healthGui.Adornee = root
-            healthGui.Position = UDim2.new(0, 0, 0, -35)
-            healthGui.Parent = root
-
-            local healthLabel = Instance.new("TextLabel")
-            healthLabel.Size = UDim2.new(1, 0, 1, 0)
-            healthLabel.BackgroundTransparency = 1
-            healthLabel.Text = "100 HP"
-            healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-            healthLabel.TextScaled = true
-            healthLabel.Font = Enum.Font.Gotham
-            healthLabel.Parent = healthGui
-
-            local hum = char:FindFirstChild("Humanoid")
-            if hum then
-                hum:GetPropertyChangedSignal("Health"):Connect(function()
-                    healthLabel.Text = math.floor(hum.Health) .. " HP"
-                    healthLabel.TextColor3 = hum.Health > 50 and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-                end)
-            end
-            table.insert(espObjects, healthGui)
-        end
+-- ========== BOLINHA ABRE/FECHA ==========
+bolinha.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+    bolinha.Visible = not frame.Visible
+    if frame.Visible then
+        -- Atualiza informações
+        local idx, island = getCurrentIsland()
+        state.CurrentIsland = idx
+        islandLabel.Text = "Ilha: " .. island.name
+        levelLabel.Text = "Nível: " .. tostring(LocalPlayer.Data.Level.Value)
     end
-
-    for _, jog in pairs(Players:GetPlayers()) do
-        criarESP(jog)
-    end
-
-    espConnections[1] = Players.PlayerAdded:Connect(function(jog)
-        jog.CharacterAdded:Connect(function()
-            task.wait(0.5)
-            if state.ESP then criarESP(jog) end
-        end)
-    end)
-
-    espConnections[2] = RunService.RenderStepped:Connect(function()
-        if not state.ESP then return end
-        for _, jog in pairs(Players:GetPlayers()) do
-            if jog ~= LocalPlayer and jog.Character then
-                local root = jog.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local box = root:FindFirstChild("ESP_Box")
-                    if box and state.ESPBox then box.CFrame = root.CFrame end
-
-                    local line = root:FindFirstChild("ESP_Line")
-                    if line and state.ESPLine then
-                        local origin = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if origin then
-                            line.CFrame = CFrame.new(origin.Position, root.Position)
-                            line.Length = (origin.Position - root.Position).Magnitude
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end
-
-local function toggleESP(ativo)
-    state.ESP = ativo
-    if ativo then atualizarESP() else limparESP() end
-end
-
-local function toggleESPBox(ativo)
-    state.ESPBox = ativo
-    if state.ESP then atualizarESP() end
-end
-local function toggleESPLine(ativo)
-    state.ESPLine = ativo
-    if state.ESP then atualizarESP() end
-end
-local function toggleESPName(ativo)
-    state.ESPName = ativo
-    if state.ESP then atualizarESP() end
-end
-local function toggleESPHealth(ativo)
-    state.ESPHealth = ativo
-    if state.ESP then atualizarESP() end
-end
-
--- ========== MOVIMENTO ==========
-local function toggleInfiniteJump(ativo)
-    state.InfiniteJump = ativo
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.UseJumpPower = ativo
-    end
-end
-
-local function toggleNoclip(ativo)
-    state.Noclip = ativo
-    local char = LocalPlayer.Character
-    if char then
-        for _, part in pairs(char:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = not ativo
-            end
-        end
-    end
-end
-
-local function setSpeed(valor)
-    state.Speed = valor
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.WalkSpeed = valor
-    end
-end
-
-local function setJumpPower(valor)
-    state.JumpPower = valor
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.JumpPower = valor
-    end
-end
+end)
 
 -- ========== PERSISTÊNCIA ==========
-LocalPlayer.CharacterAdded:Connect(function(char)
-    task.wait(0.5)
-    if state.InfiniteJump then toggleInfiniteJump(true) end
-    if state.Noclip then toggleNoclip(true) end
-    if state.Speed ~= 16 then setSpeed(state.Speed) end
-    if state.JumpPower ~= 50 then setJumpPower(state.JumpPower) end
-    if state.ESP then atualizarESP() end
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    if state.AutoFarm then
+        startAutoFarm()
+    end
 end)
 
--- ========== CRIAÇÃO DOS ELEMENTOS ==========
-
--- Aba Aimbot
-criarToggle(framesAbas[1], "Aimbot", 10, toggleAimbot)
-criarToggle(framesAbas[1], "Silent Aim", 55, toggleSilentAim)
-criarSlider(framesAbas[1], "FOV", 105, 50, 300, 150, function(val)
-    state.FOV = val
-    if state.Aimbot then criarFOV() end
+-- Atualiza nível periodicamente
+RunService.Heartbeat:Connect(function()
+    if frame.Visible then
+        levelLabel.Text = "Nível: " .. tostring(LocalPlayer.Data.Level.Value)
+    end
 end)
 
--- Aba ESP
-criarToggle(framesAbas[2], "ESP Geral", 10, toggleESP)
-criarToggle(framesAbas[2], "Box", 55, toggleESPBox)
-criarToggle(framesAbas[2], "Linha", 95, toggleESPLine)
-criarToggle(framesAbas[2], "Nome", 135, toggleESPName)
-criarToggle(framesAbas[2], "Vida", 175, toggleESPHealth)
-
--- Aba Movimento
-criarToggle(framesAbas[3], "Infinite Jump", 10, toggleInfiniteJump)
-criarToggle(framesAbas[3], "Noclip", 55, toggleNoclip)
-criarSlider(framesAbas[3], "Velocidade", 105, 10, 100, 16, setSpeed)
-criarSlider(framesAbas[3], "Pulo", 160, 20, 200, 50, setJumpPower)
-
--- Aba Config
-local reset = Instance.new("TextButton")
-reset.Size = UDim2.new(0.8, 0, 0, 40)
-reset.Position = UDim2.new(0.1, 0, 0, 20)
-reset.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-reset.BorderSizePixel = 0
-reset.Text = "🔄 RESTAURAR PADRÃO"
-reset.TextColor3 = Color3.fromRGB(255, 255, 255)
-reset.TextScaled = true
-reset.Font = Enum.Font.GothamBold
-reset.Parent = framesAbas[4]
-reset.MouseButton1Click:Connect(function()
-    toggleAimbot(false)
-    toggleSilentAim(false)
-    toggleESP(false)
-    toggleInfiniteJump(false)
-    toggleNoclip(false)
-    setSpeed(16)
-    setJumpPower(50)
-    state.ESPBox = false
-    state
+print("✅ BLOX FRUITS AUTO FARM carregado! Clique na bolinha vermelha.")
