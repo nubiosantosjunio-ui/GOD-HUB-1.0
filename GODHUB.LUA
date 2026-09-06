@@ -130,8 +130,6 @@ local islands = {
         levelMax = 15,
         npcName = "Bandit",
         spawnLocation = Vector3.new(-1200, 25, 2800),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-1250, 25, 2750),
     },
     {
         name = "Pirate Village",
@@ -139,8 +137,6 @@ local islands = {
         levelMax = 40,
         npcName = "Pirate",
         spawnLocation = Vector3.new(-600, 15, 900),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-650, 15, 850),
     },
     {
         name = "Desert",
@@ -148,8 +144,6 @@ local islands = {
         levelMax = 75,
         npcName = "Desert Bandit",
         spawnLocation = Vector3.new(1000, 20, 2000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(950, 20, 1950),
     },
     {
         name = "Snow Island",
@@ -157,8 +151,6 @@ local islands = {
         levelMax = 120,
         npcName = "Snow Bandit",
         spawnLocation = Vector3.new(-3000, 100, 6000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-3050, 100, 5950),
     },
     {
         name = "Marine Fortress",
@@ -166,8 +158,6 @@ local islands = {
         levelMax = 200,
         npcName = "Marine",
         spawnLocation = Vector3.new(2000, 30, -3000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(1950, 30, -3050),
     },
     {
         name = "Sky Islands",
@@ -175,8 +165,6 @@ local islands = {
         levelMax = 300,
         npcName = "Sky Bandit",
         spawnLocation = Vector3.new(-4000, 300, 8000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-4050, 300, 7950),
     },
     {
         name = "Dragon Island",
@@ -184,8 +172,6 @@ local islands = {
         levelMax = 500,
         npcName = "Dragon",
         spawnLocation = Vector3.new(5000, 50, 5000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(4950, 50, 4950),
     },
     {
         name = "Sea of Treats",
@@ -193,8 +179,6 @@ local islands = {
         levelMax = 750,
         npcName = "Candy",
         spawnLocation = Vector3.new(-5000, 10, -5000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-5050, 10, -5050),
     },
     {
         name = "Graveyard",
@@ -202,8 +186,6 @@ local islands = {
         levelMax = 1000,
         npcName = "Zombie",
         spawnLocation = Vector3.new(6000, 80, -4000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(5950, 80, -4050),
     },
     {
         name = "Frozen Village",
@@ -211,8 +193,6 @@ local islands = {
         levelMax = 1500,
         npcName = "Frozen Bandit",
         spawnLocation = Vector3.new(-7000, 150, 8000),
-        questGiver = "Quest Giver",
-        questLocation = Vector3.new(-7050, 150, 7950),
     },
 }
 
@@ -224,7 +204,6 @@ local function getCurrentIsland()
             return i, island
         end
     end
-    -- Se passou de todos, fica no último
     return #islands, islands[#islands]
 end
 
@@ -268,7 +247,7 @@ local function getQuest()
     -- Procura o NPC de missão
     local questNPC = nil
     for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Model") and v.Name:find(island.questGiver) and v:FindFirstChild("Humanoid") then
+        if v:IsA("Model") and v.Name:find("Quest Giver") and v:FindFirstChild("Humanoid") then
             questNPC = v
             break
         end
@@ -296,8 +275,6 @@ local function walkTo(position)
     local hum = char:FindFirstChild("Humanoid")
     if not hum then return end
 
-    -- Move até a posição
-    local moveDirection = (position - hrp.Position).Unit
     hum:MoveTo(position)
     return true
 end
@@ -313,21 +290,20 @@ local function attackNPC(npc)
     local npcHrp = npc:FindFirstChild("HumanoidRootPart")
     if not npcHrp then return end
 
-    -- Verifica se está perto
     local dist = (npcHrp.Position - hrp.Position).Magnitude
     if dist > 10 then
         walkTo(npcHrp.Position)
         return
     end
 
-    -- Ataca (simula clique)
+    -- Ataca
     local tool = char:FindFirstChildOfClass("Tool")
     if tool then
         tool:Activate()
         tool:Deactivate()
     end
 
-    -- Usa fruta se tiver
+    -- Usa fruta
     local fruit = char:FindFirstChild("Blox Fruit")
     if fruit then
         fruit:Activate()
@@ -344,7 +320,6 @@ local function startAutoFarm()
     statusLabel.Text = "Status: Farmando..."
     statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
 
-    -- Atualiza ilha atual
     local idx, island = getCurrentIsland()
     state.CurrentIsland = idx
     islandLabel.Text = "Ilha: " .. island.name
@@ -359,21 +334,18 @@ local function startAutoFarm()
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
 
-        -- Atualiza nível
         local level = LocalPlayer.Data.Level.Value
         levelLabel.Text = "Nível: " .. tostring(level)
 
-        -- Verifica se precisa trocar de ilha
         local idx, island = getCurrentIsland()
         if idx ~= state.CurrentIsland then
             state.CurrentIsland = idx
             islandLabel.Text = "Ilha: " .. island.name
-            -- Vai para a nova ilha
             walkTo(island.spawnLocation)
             return
         end
 
-        -- Verifica se tem missão ativa
+        -- Pega missão
         local hasQuest = false
         for _, v in pairs(LocalPlayer.PlayerGui:GetChildren()) do
             if v:IsA("Frame") and v.Name == "QuestFrame" then
@@ -382,21 +354,19 @@ local function startAutoFarm()
             end
         end
 
-        -- Se não tem missão, pega
         if not hasQuest then
             statusLabel.Text = "Status: Pegando missão..."
             getQuest()
             return
         end
 
-        -- Encontra NPCs
+        -- Ataca NPCs
         local npc = getNearestNPC(island)
         if npc then
             state.TargetNPC = npc
             statusLabel.Text = "Status: Atacando " .. npc.Name
             attackNPC(npc)
         else
-            -- Se não tem NPC, vai para o spawn da ilha
             statusLabel.Text = "Status: Procurando NPCs..."
             walkTo(island.spawnLocation)
         end
@@ -426,7 +396,6 @@ bolinha.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     bolinha.Visible = not frame.Visible
     if frame.Visible then
-        -- Atualiza informações
         local idx, island = getCurrentIsland()
         state.CurrentIsland = idx
         islandLabel.Text = "Ilha: " .. island.name
@@ -442,7 +411,6 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
--- Atualiza nível periodicamente
 RunService.Heartbeat:Connect(function()
     if frame.Visible then
         levelLabel.Text = "Nível: " .. tostring(LocalPlayer.Data.Level.Value)
