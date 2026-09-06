@@ -2,6 +2,7 @@
     GOD HUB ULTIMATE - Mod Menu Profissional
     Interface futurística, todas as funções funcionando 100%
     Bolinha do Gojo, Aimbot, Silent Aim, ESP, Movimento, Sliders interativos
+    Criado 100% por ZIG ✌️
 --]]
 
 local Players = game:GetService("Players")
@@ -11,10 +12,10 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
 
--- GUI
+-- Criar GUI com segurança
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "GODHUB"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = LocalPlayer:FindFirstChild("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 -- Estado
@@ -47,8 +48,8 @@ bolinha.Parent = ScreenGui
 
 -- ========== GUI PRINCIPAL (FUTURÍSTICA) ==========
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 420, 0, 520)
-frame.Position = UDim2.new(0.5, -210, 0.5, -260)
+frame.Size = UDim2.new(0, 420, 0, 550) -- Aumentei para caber a aba Créditos
+frame.Position = UDim2.new(0.5, -210, 0.5, -275)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
 frame.BorderSizePixel = 2
 frame.BorderColor3 = Color3.fromRGB(0, 150, 255)
@@ -57,6 +58,8 @@ frame.Active = true
 frame.Draggable = true
 frame.Visible = false
 frame.BackgroundTransparency = 0.1
+
+-- Gradiente
 local grad = Instance.new("UIGradient", frame)
 grad.Color = ColorSequence.new({
     ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 10, 30)),
@@ -103,18 +106,18 @@ minimizar.TextSize = 20
 minimizar.Font = Enum.Font.GothamBold
 minimizar.Parent = frame
 minimizar.MouseButton1Click:Connect(function()
-    frame.Size = frame.Size == UDim2.new(0, 420, 0, 50) and UDim2.new(0, 420, 0, 520) or UDim2.new(0, 420, 0, 50)
+    frame.Size = frame.Size == UDim2.new(0, 420, 0, 50) and UDim2.new(0, 420, 0, 550) or UDim2.new(0, 420, 0, 50)
 end)
 
 -- ========== ABAS ==========
-local abas = {"Aimbot", "ESP", "Movimento", "Config"}
+local abas = {"Aimbot", "ESP", "Movimento", "Config", "Créditos"}
 local botoesAbas = {}
 local framesAbas = {}
 
 for i, nome in ipairs(abas) do
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.25, -1, 0, 35)
-    btn.Position = UDim2.new((i - 1) * 0.25, 1, 0, 50)
+    btn.Size = UDim2.new(0.2, -1, 0, 35)  -- 5 abas, 0.2 cada
+    btn.Position = UDim2.new((i - 1) * 0.2, 1, 0, 50)
     btn.BackgroundColor3 = Color3.fromRGB(0, 30, 50)
     btn.BorderSizePixel = 1
     btn.BorderColor3 = Color3.fromRGB(0, 150, 255)
@@ -231,7 +234,6 @@ local function criarSlider(parent, texto, y, min, max, padrao, callback)
         if conexao then conexao:Disconnect() end
     end)
 
-    -- Suporte para toque (celular)
     drag.TouchEnded:Connect(function()
         arrastando = false
         if conexao then conexao:Disconnect() end
@@ -352,7 +354,6 @@ local function atualizarESP()
         local root = char:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
-        -- Box
         if state.ESPBox then
             local box = Instance.new("BoxHandleAdornment")
             box.Name = "ESP_Box"
@@ -366,7 +367,6 @@ local function atualizarESP()
             table.insert(espObjects, box)
         end
 
-        -- Line
         if state.ESPLine then
             local line = Instance.new("LineHandleAdornment")
             line.Name = "ESP_Line"
@@ -384,7 +384,6 @@ local function atualizarESP()
             table.insert(espObjects, line)
         end
 
-        -- Name
         if state.ESPName then
             local nameTag = Instance.new("BillboardGui")
             nameTag.Name = "ESP_Name"
@@ -404,7 +403,6 @@ local function atualizarESP()
             table.insert(espObjects, nameTag)
         end
 
-        -- Health
         if state.ESPHealth then
             local healthGui = Instance.new("BillboardGui")
             healthGui.Name = "ESP_Health"
@@ -544,9 +542,7 @@ criarToggle(framesAbas[1], "Aimbot", 10, toggleAimbot)
 criarToggle(framesAbas[1], "Silent Aim", 55, toggleSilentAim)
 criarSlider(framesAbas[1], "FOV", 105, 50, 300, 150, function(val)
     state.FOV = val
-    if state.Aimbot then
-        criarFOV()
-    end
+    if state.Aimbot then criarFOV() end
 end)
 
 -- Aba ESP
@@ -577,6 +573,4 @@ reset.MouseButton1Click:Connect(function()
     toggleAimbot(false)
     toggleSilentAim(false)
     toggleESP(false)
-    toggleInfiniteJump(false)
-    toggleNoclip(false)
-    setSpeed(
+    tog
