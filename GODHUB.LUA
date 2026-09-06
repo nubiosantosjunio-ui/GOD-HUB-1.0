@@ -12,11 +12,11 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local Camera = workspace.CurrentCamera
 
--- Criar GUI com segurança
+-- Criar GUI com segurança (CORRIGIDO)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "GODHUB"
-ScreenGui.Parent = LocalPlayer:FindFirstChild("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")  -- <-- CORRIGIDO
+ScreenGui.ResetOnSpawn = false  -- <-- CORRIGIDO
 
 -- Estado
 local state = {
@@ -41,14 +41,14 @@ bolinha.Position = UDim2.new(0, 15, 0, 120)
 bolinha.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 bolinha.BorderSizePixel = 2
 bolinha.BorderColor3 = Color3.fromRGB(0, 200, 255)
-bolinha.Image = "rbxassetid://4483345998"  -- ícone padrão, troque pelo ID do Gojo se quiser
+bolinha.Image = "rbxassetid://4483345998"
 bolinha.ImageColor3 = Color3.fromRGB(255, 255, 255)
 bolinha.ScaleType = Enum.ScaleType.Fit
 bolinha.Parent = ScreenGui
 
--- ========== GUI PRINCIPAL (FUTURÍSTICA) ==========
+-- ========== GUI PRINCIPAL ==========
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 420, 0, 550) -- Aumentei para caber a aba Créditos
+frame.Size = UDim2.new(0, 420, 0, 550)
 frame.Position = UDim2.new(0.5, -210, 0.5, -275)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
 frame.BorderSizePixel = 2
@@ -116,7 +116,7 @@ local framesAbas = {}
 
 for i, nome in ipairs(abas) do
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.2, -1, 0, 35)  -- 5 abas, 0.2 cada
+    btn.Size = UDim2.new(0.2, -1, 0, 35)
     btn.Position = UDim2.new((i - 1) * 0.2, 1, 0, 50)
     btn.BackgroundColor3 = Color3.fromRGB(0, 30, 50)
     btn.BorderSizePixel = 1
@@ -573,4 +573,9 @@ reset.MouseButton1Click:Connect(function()
     toggleAimbot(false)
     toggleSilentAim(false)
     toggleESP(false)
-    tog
+    toggleInfiniteJump(false)
+    toggleNoclip(false)
+    setSpeed(16)
+    setJumpPower(50)
+    state.ESPBox = false
+    state
